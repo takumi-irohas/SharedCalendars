@@ -22,6 +22,7 @@ public class MemoDAO {
 	 * @param isWritable 書き込み可能
 	 * @return SQLiteDatabaseインスタンス
 	 */
+
 	public static SQLiteDatabase getSqLiteDatabase(Context context , boolean isWritable) {
 		LoadToSQLiteMasterSQLiteOpenHelper loadToSQLiteMasterSQLiteOpenHelper = new LoadToSQLiteMasterSQLiteOpenHelper(context);
 		SQLiteDatabase sqLiteDatabase = null;
