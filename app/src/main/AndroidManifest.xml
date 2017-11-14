@@ -9,12 +9,21 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".CalendarActivity">
+        <activity android:name=".view.activity.CalendarActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity android:name=".view.activity.MemoListActivity">
+
+        </activity>
+        <activity android:name=".view.activity.AddMemoActivity">
+
+        </activity>
+        <activity android:name=".view.activity.ShowMemoActivity">
+
         </activity>
     </application>
 
