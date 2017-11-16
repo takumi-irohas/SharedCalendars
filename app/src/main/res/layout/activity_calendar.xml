@@ -29,7 +29,7 @@
         android:textColor="@color/titleTextColor"
         android:background="@color/colorPrimary"/>
 
-    <com.github.sundeepk.compactcalendarview.CompactCalendarView
+    <com.github.sundeepk.compactcalendarview.CompactCalendar
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/compact_calendar_view"
         android:layout_width="match_parent"
