@@ -3,6 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/set_plans"
+        android:icon="@drawable/ic_add_24dp"
+        android:title="set_memo"
+        app:showAsAction="always"/>
+    <item
         android:id="@+id/set_memo"
         android:icon="@drawable/ic_content_paste_white_24dp"
         android:title="set_memo"

@@ -42,10 +42,10 @@ import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 /**
- * Created by higashiyamamasahiro on 西暦17/11/14.
+ * Created by higashiyamamasahiro on 西暦17/11/16.
  */
 
-public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
+public class AddPlanActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 	GoogleAccountCredential mCredential;
 	private TextView mOutputText;
 	private Button mCallApiButton;
@@ -119,7 +119,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 		).setBackOff(new ExponentialBackOff());
 	}
 
-
 	/**
 	 * Google Calendar API の呼び出しの事前条件を確認し、条件を満たしていればAPIを呼び出す。
 	 *
@@ -184,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 	) {
 		GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
 		Dialog dialog = apiAvailability.getErrorDialog(
-				MainActivity.this,
+				AddPlanActivity.this,
 				connectionStatusCode,
 				REQUEST_GOOGLE_PLAY_SERVICES
 		);
@@ -424,7 +423,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 				} else if (mLastError instanceof UserRecoverableAuthIOException) {
 					startActivityForResult(
 							((UserRecoverableAuthIOException) mLastError).getIntent(),
-							MainActivity.REQUEST_AUTHORIZATION);
+							REQUEST_AUTHORIZATION);
 				} else {
 					mOutputText.setText("The following error occurred:\n" + mLastError.getMessage());
 				}
