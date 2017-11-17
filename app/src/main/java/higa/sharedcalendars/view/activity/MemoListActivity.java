@@ -43,7 +43,7 @@ public class MemoListActivity extends AppCompatActivity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.memo_list_item, menu);
+		getMenuInflater().inflate(R.menu.menu_activity_calendars, menu);
 		return true;
 	}
 

@@ -7,7 +7,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="computerscience.sharedcalendars.view.activity.CalendarActivity">
+    tools:context="higa.sharedcalendars.view.activity.CalendarActivity">
 
     <android.support.v7.widget.Toolbar
         android:layout_width="match_parent"
@@ -22,7 +22,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:id="@+id/time"
+        android:id="@+id/text_month"
         android:layout_centerHorizontal="true"
         android:gravity="center_horizontal"
         android:textSize="30sp"
@@ -34,7 +34,7 @@
         android:id="@+id/compact_calendar_view"
         android:layout_width="match_parent"
         android:layout_height="250dp"
-        app:compactCalendarTargetHeight="250dp"
+        app:compactCalendarTargetHeight="200dp"
         app:compactCalendarTextSize="12sp"
         app:compactCalendarBackgroundColor="@color/colorPrimary"
         app:compactCalendarTextColor="#FFFFFF"
@@ -44,7 +44,6 @@
         app:compactCalendarEventIndicatorStyle="small_indicator"
         app:compactCalendarOtherMonthDaysTextColor="#534c4c"
         app:compactCalendarShouldSelectFirstDayOfMonthOnScroll="true"/>
-
 
     <FrameLayout
         android:layout_width="match_parent"
