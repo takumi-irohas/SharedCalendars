@@ -21,7 +21,7 @@ import higa.sharedcalendars.dao.MemoDTO;
  * Created by higashiyamamasahiro on 西暦17/11/08.
  */
 
-public class AddMemoActivity extends AppCompatActivity {
+public class AddMemoActivity extends AppCompatActivity{
 //	private String db = "memo.db";
 	private EditText memoTitleEditText;
 	private EditText memoContentEditText;
