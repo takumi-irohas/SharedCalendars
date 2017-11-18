@@ -42,10 +42,10 @@ import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 /**
- * Created by higashiyamamasahiro on 西暦17/11/16.
+ * Created by higashiyamamasahiro on 西暦17/11/19.
  */
 
-public class AddPlanActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
+public class CalendarActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 	GoogleAccountCredential mCredential;
 	private TextView mOutputText;
 	private Button mCallApiButton;
@@ -183,7 +183,7 @@ public class AddPlanActivity extends AppCompatActivity implements EasyPermission
 	) {
 		GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
 		Dialog dialog = apiAvailability.getErrorDialog(
-				AddPlanActivity.this,
+				CalendarActivity.this,
 				connectionStatusCode,
 				REQUEST_GOOGLE_PLAY_SERVICES
 		);

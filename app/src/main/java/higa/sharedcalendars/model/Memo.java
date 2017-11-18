@@ -24,10 +24,7 @@ public class Memo {
         return "Memo{" +
                 "id=" + id +
                 ", memoTitle='" + memoTitle + '\'' +
-//                ", payType=" + payType +
                 ", memoContent=" + memoContent +
-//                ", cutOffDay=" + cutOffDay +
-//                ", payDay=" + payDay +
                 '}';
     }
 }
