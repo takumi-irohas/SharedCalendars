@@ -32,10 +32,10 @@ dependencies {
     implementation 'com.github.sundeepk:compact-calendar-view:2.0.2.2'
     annotationProcessor 'com.github.gfx.android.orma:orma-processor:4.2.5'
     compile 'com.github.gfx.android.orma:orma:4.2.5'
-    compile('com.google.api-client:google-api-client-android:1.22.0') {
+    implementation('com.google.api-client:google-api-client-android:1.22.0') {
         exclude group: 'org.apache.httpcomponents'
     }
-    compile('com.google.apis:google-api-services-calendar:v3-rev214-1.22.0') {
+    implementation('com.google.apis:google-api-services-calendar:v3-rev214-1.22.0') {
         exclude group: 'org.apache.httpcomponents'
     }
     implementation 'com.android.support:recyclerview-v7:26.1.0'
