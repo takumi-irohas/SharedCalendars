@@ -1,4 +1,4 @@
-package com.example.partjobplan;
+package higa.sharedcalendars.view.customview;
 
 import android.content.Context;
 import android.support.v4.view.ViewPager;
@@ -9,12 +9,12 @@ import android.view.MotionEvent;
  * Created by higashiyamamasahiro on 西暦17/09/13.
  */
 
-public class NonSwipeableViewPager extends ViewPager {
-	public NonSwipeableViewPager(Context context) {
+public class NonSwipeAbleViewPager extends ViewPager {
+	public NonSwipeAbleViewPager(Context context) {
 		super(context);
 	}
 	
-	public NonSwipeableViewPager(Context context, AttributeSet attrs) {
+	public NonSwipeAbleViewPager(Context context, AttributeSet attrs) {
 		super(context, attrs);
 	}
 	
