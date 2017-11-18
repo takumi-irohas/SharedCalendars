@@ -23,10 +23,7 @@
         <activity android:name=".view.activity.MemoListActivity">
 
         </activity>
-        <activity android:name=".view.activity.AddMemoActivity">
-
-        </activity>
-        <activity android:name=".view.activity.ShowMemoActivity">
+        <activity android:name=".view.activity.WhiteMemoActivity">
 
         </activity>
         <meta-data
