@@ -1,7 +1,5 @@
 package higa.sharedcalendars.model;
 
-import android.support.annotation.Nullable;
-
 import com.github.gfx.android.orma.annotation.Column;
 import com.github.gfx.android.orma.annotation.PrimaryKey;
 import com.github.gfx.android.orma.annotation.Table;
@@ -15,19 +13,15 @@ public class Memo {
     @Column(indexed = true)
     public String memoTitle;
     
-    @Column
-    @Nullable
-    public int memoContent;
+    @Column (indexed = true)
+    public String memoContent;
 
     @Override
     public String toString() {
         return "Memo{" +
                 "id=" + id +
                 ", memoTitle='" + memoTitle + '\'' +
-//                ", payType=" + payType +
                 ", memoContent=" + memoContent +
-//                ", cutOffDay=" + cutOffDay +
-//                ", payDay=" + payDay +
                 '}';
     }
 }
