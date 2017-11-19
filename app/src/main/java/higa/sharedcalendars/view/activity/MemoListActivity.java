@@ -11,8 +11,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Toolbar;
+import android.support.v7.widget.Toolbar;
 
 import java.util.List;
 
@@ -40,23 +39,11 @@ public class MemoListActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_memo_list);
-		initToolbar();
+		toolbar = (Toolbar)findViewById(R.id.memo_list_toolbar);
+		setSupportActionBar(toolbar);
 		db = DatabaseHelper.db(this);
 		setView();
 		recycler();
-	}
-
-	public void initToolbar(){
-		toolbar = (Toolbar)findViewById(R.id.memo_list_toolbar);
-		toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
-		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-			@Override
- 			public void onClick(View v) {
-				Intent intent = new Intent(MemoListActivity.this, CalendarActivity.class);
-				startActivity(intent);
-			}
- 		});
-
 	}
 
 	@Override

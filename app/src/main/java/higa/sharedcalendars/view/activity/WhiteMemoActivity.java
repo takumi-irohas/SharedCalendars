@@ -107,7 +107,7 @@ public class WhiteMemoActivity extends AppCompatActivity {
 	private void saveMemo() {
 		Memo memo = new Memo();
 		memo.memoTitle = memoTitle.getText().toString();
-		memo.memoContent = Integer.parseInt(memoContent.getText().toString());
+		memo.memoContent = memoContent.getText().toString();
 
 		db.relationOfMemo().inserter().execute(memo);
 	}
