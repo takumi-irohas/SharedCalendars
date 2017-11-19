@@ -1,39 +1,104 @@
 package higa.sharedcalendars.view.activity;
 
+import android.Manifest;
+import android.accounts.AccountManager;
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
+import android.text.method.ScrollingMovementMethod;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.DateTime;
+import com.google.api.client.util.ExponentialBackOff;
+import com.google.api.services.calendar.CalendarScopes;
+import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.Events;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import higa.sharedcalendars.R;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 
 /**
  * Created by higashiyamamasahiro on 西暦17/11/19.
  */
 
-public class CalendarActivity extends AppCompatActivity {
+public class CalendarActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 	private Toolbar toolbar;
-//	GoogleAccountCredential mCredential;
-//	private TextView mOutputText;
-//	private Button mCallApiButton;
-//	ProgressDialog mProgress;
-//
-//	static final int REQUEST_ACCOUNT_PICKER = 1000;
-//	static final int REQUEST_AUTHORIZATION = 1001;
-//	static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
-//	static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
-//
-//	private static final String BUTTON_TEXT = "Call Google Calendar API";
-//	private static final String PREF_ACCOUNT_NAME = "accountName";
-//	private static final String[] SCOPES = {CalendarScopes.CALENDAR};
+	GoogleAccountCredential mCredential;
+	private TextView mOutputText;
+	private Button mCallApiButton;
+	ProgressDialog mProgress;
+
+	static final int REQUEST_ACCOUNT_PICKER = 1000;
+	static final int REQUEST_AUTHORIZATION = 1001;
+	static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
+	static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
+
+	private static final String BUTTON_TEXT = "Call Google Calendar API";
+	private static final String PREF_ACCOUNT_NAME = "accountName";
+	private static final String[] SCOPES = { CalendarScopes.CALENDAR_READONLY };
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_calendar);
 		toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
+
+		mCallApiButton = (Button)findViewById(R.id.api_call_button);
+		mCallApiButton.setText(BUTTON_TEXT);
+		mCallApiButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				mCallApiButton.setEnabled(false);
+				mOutputText.setText("");
+				getResultsFromApi();
+				mCallApiButton.setEnabled(true);
+			}
+		});
+
+		mOutputText = (TextView)findViewById(R.id.api_call_text);
+		mOutputText.setPadding(16, 16, 16, 16);
+		mOutputText.setVerticalScrollBarEnabled(true);
+		mOutputText.setMovementMethod(new ScrollingMovementMethod());
+		mOutputText.setText(
+				"Click the \'" + BUTTON_TEXT +"\' button to test the API.");
+
+		mProgress = new ProgressDialog(this);
+		mProgress.setMessage("Calling Google Calendar API ...");
+
+		// Initialize credentials and service object.
+		mCredential = GoogleAccountCredential.usingOAuth2(
+				getApplicationContext(), Arrays.asList(SCOPES))
+				.setBackOff(new ExponentialBackOff());
 	}
 
 	@Override
@@ -48,367 +113,307 @@ public class CalendarActivity extends AppCompatActivity {
 		return true;
 	}
 
-		// Activity のレイアウトを準備する
-//		LinearLayout activityLayout = new LinearLayout(this);
-//		LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-//				LinearLayout.LayoutParams.MATCH_PARENT,
-//				LinearLayout.LayoutParams.MATCH_PARENT);
-//		activityLayout.setLayoutParams(lp);
-//		activityLayout.setOrientation(LinearLayout.VERTICAL);
-//		activityLayout.setPadding(16, 16, 16, 16);
-//
-//		ViewGroup.LayoutParams tlp = new ViewGroup.LayoutParams(
-//				ViewGroup.LayoutParams.WRAP_CONTENT,
-//				ViewGroup.LayoutParams.WRAP_CONTENT);
-//
-//		// Google Calendar API を呼び出す　Button を準備する
-//		mCallApiButton = new Button(this);
-//		mCallApiButton.setText(BUTTON_TEXT);
-//		mCallApiButton.setOnClickListener(new View.OnClickListener() {
-//			@Override
-//			public void onClick(View v) {
-//				mCallApiButton.setEnabled(false);
-//				mOutputText.setText("");
-//				getResultsFromApi();
-//				mCallApiButton.setEnabled(true);
-//			}
-//		});
-//		activityLayout.addView(mCallApiButton);
-//
-//		// Google Calendar API の呼び出し結果を表示する　TextView を準備する
-//		mOutputText = new TextView(this);
-//		mOutputText.setLayoutParams(tlp);
-//		mOutputText.setPadding(16, 16, 16, 16);
-//		mOutputText.setVerticalScrollBarEnabled(true);
-//		mOutputText.setMovementMethod(new ScrollingMovementMethod());
-//		mOutputText.setText("Click the \'" + BUTTON_TEXT + "\' button to test the API.");
-//		activityLayout.addView(mOutputText);
-//
-//		// Google Calendar API の呼び出し中を表す PrgressDialog を準備する
-//		mProgress = new ProgressDialog(this);
-//		mProgress.setMessage("Calling Google Calendar API ...");
-//
-//		// ActivityにViewを設定する
-//		setContentView(activityLayout);
-//
-//		// Google Calendar API の呼び出しのための認証情報を初期化する
-//		mCredential = GoogleAccountCredential.usingOAuth2(
-//				getApplicationContext(),
-//				Arrays.asList(SCOPES)
-//		).setBackOff(new ExponentialBackOff());
-//	}
+	/**
+	 * Create the main activity.
+	 * @param savedInstanceState previously saved instance data.
+	 */
 
-//	/**
-//	 * Google Calendar API の呼び出しの事前条件を確認し、条件を満たしていればAPIを呼び出す。
-//	 *
-//	 * 事前条件：
-//	 * - 有効な Google Play Services がインストールされていること
-//	 * - 有効な Google アカウントが選択されていること
-//	 * - 端末がインターネット接続可能であること
-//	 *
-//	 * 事前条件を満たしていない場合には、ユーザーに説明を表示する。
-//	 */
-//	private void getResultsFromApi() {
-//		if (!isGooglePlayServicesAvailable()) {
-//			// Google Play Services が無効な場合
-//			acquireGooglePlayServices();
-//		}
-//		else if (mCredential.getSelectedAccountName() == null) {
-//			// 有効な Google アカウントが選択されていない場合
-//			chooseAccount();
-//		}
-//		else if (!isDeviceOnline()) {
-//			// 端末がインターネットに接続されていない場合
-//			mOutputText.setText("No network connection available.");
-//		}
-//		else {
-//			new MakeRequestTask(mCredential).execute();
-//		}
-//	}
-//
-//	/**
-//	 * 端末に Google Play Services がインストールされ、アップデートされているか否かを確認する。
-//	 *
-//	 * @return 利用可能な Google Play Services がインストールされ、アップデートされている場合にはtrueを、
-//	 * そうでない場合にはfalseを返す。
-//	 */
-//	private boolean isGooglePlayServicesAvailable() {
-//		GoogleApiAvailability apiAvailability =
-//				GoogleApiAvailability.getInstance();
-//		final int connectionStatusCode =
-//				apiAvailability.isGooglePlayServicesAvailable(this);
-//		return connectionStatusCode == ConnectionResult.SUCCESS;
-//	}
-//
-//	/**
-//	 * ユーザーにダイアログを表示して、Google Play Services を利用可能な状態に設定するように促す。
-//	 * ただし、ユーザーが解決できないようなエラーの場合には、ダイアログを表示しない。
-//	 */
-//	private void acquireGooglePlayServices() {
-//		GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
-//		final int connectionStatusCode = apiAvailability.isGooglePlayServicesAvailable(this);
-//		if (apiAvailability.isUserResolvableError(connectionStatusCode)) {
-//			showGooglePlayServicesAvailabilityErrorDialog(connectionStatusCode);
-//		}
-//	}
-//
-//	/**
-//	 * 有効な Google Play Services が見つからないことをエラーダイアログで表示する。
-//	 *
-//	 * @param connectionStatusCode Google Play Services が無効であることを示すコード
-//	 */
-//	void showGooglePlayServicesAvailabilityErrorDialog(
-//			final int connectionStatusCode
-//	) {
-//		GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
-//		Dialog dialog = apiAvailability.getErrorDialog(
-//				CalendarActivity.this,
-//				connectionStatusCode,
-//				REQUEST_GOOGLE_PLAY_SERVICES
-//		);
-//		dialog.show();
-//	}
-//
-//	/**
-//	 * Google　Calendar API の認証情報を使用するGoogleアカウントを設定する。
-//	 *
-//	 * 既にGoogleアカウント名が保存されていればそれを使用し、保存されていなければ、
-//	 * Googleアカウントの選択ダイアログを表示する。
-//	 *
-//	 * 認証情報を用いたGoogleアカウントの設定には、"GET_ACCOUNTS"パーミッションを
-//	 * 必要とするため、必要に応じてユーザーに"GET_ACCOUNTS"パーミッションを要求する
-//	 * ダイアログが表示する。
-//	 */
-//	@AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
-//	private void chooseAccount() {
-//		// "GET_ACCOUNTS"パーミッションを取得済みか確認する
-//		if (EasyPermissions.hasPermissions(this, Manifest.permission.GET_ACCOUNTS)) {
-//			// SharedPreferencesから保存済みGoogleアカウントを取得する
-//			String accountName = getPreferences(Context.MODE_PRIVATE)
-//					.getString(PREF_ACCOUNT_NAME, null);
-//			if (accountName != null) {
-//				mCredential.setSelectedAccountName(accountName);
-//				getResultsFromApi();
-//			} else {
-//				// Googleアカウントの選択を表示する
-//				// GoogleAccountCredentialのアカウント選択画面を使用する
-//				startActivityForResult(
-//						mCredential.newChooseAccountIntent(),
-//						REQUEST_ACCOUNT_PICKER);
-//			}
-//		}
-//		else {
-//			// ダイアログを表示して、ユーザーに"GET_ACCOUNTS"パーミッションを要求する
-//			EasyPermissions.requestPermissions(
-//					this,
-//					"This app needs to access your Google account (via Contacts).",
-//					REQUEST_PERMISSION_GET_ACCOUNTS,
-//					Manifest.permission.GET_ACCOUNTS);
-//		}
-//	}
-//
-//	/**
-//	 * アカウント選択や認証など、呼び出し先のActivityから戻ってきた際に呼び出される。
-//	 *
-//	 * @param requestCode Activityの呼び出し時に指定したコード
-//	 * @param resultCode  呼び出し先のActivityでの処理結果を表すコード
-//	 * @param data        呼び出し先のActivityでの処理結果のデータ
-//	 */
-//	@Override
-//	protected void onActivityResult(
-//			int requestCode,
-//			int resultCode,
-//			Intent data
-//	) {
-//		super.onActivityResult(requestCode, resultCode, data);
-//		switch (requestCode) {
-//			case REQUEST_GOOGLE_PLAY_SERVICES:
-//				if (resultCode != RESULT_OK) {
-//					mOutputText.setText(
-//							"This app requires Google Play Services. Please install " +
-//									"Google Play Services on your device and relaunch this app.");
-//				} else {
-//					getResultsFromApi();
-//				}
-//				break;
-//
-//			case REQUEST_ACCOUNT_PICKER:
-//				if (resultCode == RESULT_OK && data != null && data.getExtras() != null) {
-//					String accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
-//					if (accountName != null) {
-//						SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
-//						SharedPreferences.Editor editor = settings.edit();
-//						editor.putString(PREF_ACCOUNT_NAME, accountName);
-//						editor.apply();
-//						mCredential.setSelectedAccountName(accountName);
-//						getResultsFromApi();
-//					}
-//				}
-//				break;
-//
-//			case REQUEST_AUTHORIZATION:
-//				if (resultCode == RESULT_OK) {
-//					getResultsFromApi();
-//				}
-//				break;
-//		}
-//	}
-//
-//	/**
-//	 * Android 6.0 (API 23) 以降にて、実行時にパーミッションを要求した際の結果を受け取る。
-//	 *
-//	 * @param requestCode  requestPermissions(android.app.Activity, String, int, String[])
-//	 *                     を呼び出した際に渡した　request code
-//	 * @param permissions  要求したパーミッションの一覧
-//	 * @param grantResults 要求したパーミッションに対する承諾結果の配列
-//	 *                     PERMISSION_GRANTED または PERMISSION_DENIED　が格納される。
-//	 */
-//	@Override
-//	public void onRequestPermissionsResult(
-//			int requestCode,
-//			@NonNull String[] permissions,
-//			@NonNull int[] grantResults
-//	) {
-//		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//		EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
-//	}
-//
-//	/**
-//	 * 要求したパーミッションがユーザーに承諾された際に、EasyPermissionsライブラリから呼び出される。
-//	 *
-//	 * @param requestCode 要求したパーミッションに関連した request code
-//	 * @param list        要求したパーミッションのリスト
-//	 */
-//	@Override
-//	public void onPermissionsGranted(int requestCode, List<String> list) {
-//		// 何もしない
-//	}
-//
-//	/**
-//	 * 要求したパーミッションがユーザーに拒否された際に、EasyPermissionsライブラリから呼び出される。
-//	 *
-//	 * @param requestCode 要求したパーミッションに関連した request code
-//	 * @param list        要求したパーミッションのリスト
-//	 */
-//	@Override
-//	public void onPermissionsDenied(int requestCode, List<String> list) {
-//		// 何もしない
-//	}
-//
-//	/**
-//	 * 現在、端末がネットワークに接続されているかを確認する。
-//	 *
-//	 * @return ネットワークに接続されている場合にはtrueを、そうでない場合にはfalseを返す。
-//	 */
-//	private boolean isDeviceOnline() {
-//		ConnectivityManager connMgr =
-//				(ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-//		NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-//		return (networkInfo != null && networkInfo.isConnected());
-//	}
-//
-//	/**
-//	 * 非同期で　Google Calendar API の呼び出しを行うクラス。
-//	 */
-//	private class MakeRequestTask extends AsyncTask<Void, Void, String> {
-//
-//		private com.google.api.services.calendar.Calendar mService = null;
-//		private Exception mLastError = null;
-//
-//		public MakeRequestTask(GoogleAccountCredential credential) {
-//			HttpTransport transport = AndroidHttp.newCompatibleTransport();
-//			JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-//			mService = new com.google.api.services.calendar.Calendar
-//					.Builder(transport, jsonFactory, credential)
-//					.setApplicationName("Google Calendar API Android Quickstart")
-//					.build();
-//		}
-//
-//		/**
-//		 * Google Calendar API を呼び出すバックグラウンド処理。
-//		 *
-//		 * @param params 引数は不要
-//		 */
-//		@Override
-//		protected String doInBackground(Void... params) {
-//			try {
-//				return createCalendar();
-//			} catch (Exception e) {
-//				mLastError = e;
-//				cancel(true);
-//				return null;
-//			}
-//		}
-//
-//		/**
-//		 * 選択されたGoogleアカウントに対して、新規にカレンダーを追加する。
-//		 *
-//		 * @return 作成したカレンダーのID
-//		 * @throws IOException
-//		 */
-//		private String createCalendar() throws IOException {
-//			// 新規にカレンダーを作成する
-//			com.google.api.services.calendar.model.Calendar calendar = new Calendar();
-//			// カレンダーにタイトルを設定する
-//			calendar.setSummary("CalendarTitle");
-//			// カレンダーにタイムゾーンを設定する
-//			calendar.setTimeZone("Asia/Tokyo");
-//
-//			// 作成したカレンダーをGoogleカレンダーに追加する
-//			Calendar createdCalendar = mService.calendars().insert(calendar).execute();
-//			String calendarId = createdCalendar.getId();
-//
-//			// カレンダー一覧から新規に作成したカレンダーのエントリを取得する
-//			CalendarListEntry calendarListEntry = mService.calendarList().get(calendarId).execute();
-//
-//			// カレンダーのデフォルトの背景色を設定する
-//			calendarListEntry.setBackgroundColor("#ff0000");
-//
-//			// カレンダーのデフォルトの背景色をGoogleカレンダーに反映させる
-//			CalendarListEntry updatedCalendarListEntry =
-//					mService.calendarList()
-//							.update(calendarListEntry.getId(), calendarListEntry)
-//							.setColorRgbFormat(true)
-//							.execute();
-//
-//			// 新規に作成したカレンダーのIDを返却する
-//			return calendarId;
-//		}
-//
-//		@Override
-//		protected void onPreExecute() {
-//			mOutputText.setText("");
-//			mProgress.show();
-//		}
-//
-//		@Override
-//		protected void onPostExecute(String output) {
-//			mProgress.hide();
-//			if (output == null || output.isEmpty()) {
-//				mOutputText.setText("No results returned.");
-//			} else {
-//				mOutputText.setText("Calendar created using the Google Calendar API: " + output);
-//			}
-//		}
-//
-//		@Override
-//		protected void onCancelled() {
-//			mProgress.hide();
-//			if (mLastError != null) {
-//				if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
-//					showGooglePlayServicesAvailabilityErrorDialog(
-//							((GooglePlayServicesAvailabilityIOException) mLastError)
-//									.getConnectionStatusCode());
-//				} else if (mLastError instanceof UserRecoverableAuthIOException) {
-//					startActivityForResult(
-//							((UserRecoverableAuthIOException) mLastError).getIntent(),
-//							REQUEST_AUTHORIZATION);
-//				} else {
-//					mOutputText.setText("The following error occurred:\n" + mLastError.getMessage());
-//				}
-//			} else {
-//				mOutputText.setText("Request cancelled.");
-//			}
-//		}
-//	}
+	/**
+	 * Attempt to call the API, after verifying that all the preconditions are
+	 * satisfied. The preconditions are: Google Play Services installed, an
+	 * account was selected and the device currently has online access. If any
+	 * of the preconditions are not satisfied, the app will prompt the user as
+	 * appropriate.
+	 */
+	private void getResultsFromApi() {
+		if (! isGooglePlayServicesAvailable()) {
+			acquireGooglePlayServices();
+		} else if (mCredential.getSelectedAccountName() == null) {
+			chooseAccount();
+		} else if (! isDeviceOnline()) {
+			mOutputText.setText("No network connection available.");
+		} else {
+			new MakeRequestTask(mCredential).execute();
+		}
+	}
+
+	/**
+	 * Attempts to set the account used with the API credentials. If an account
+	 * name was previously saved it will use that one; otherwise an account
+	 * picker dialog will be shown to the user. Note that the setting the
+	 * account to use with the credentials object requires the app to have the
+	 * GET_ACCOUNTS permission, which is requested here if it is not already
+	 * present. The AfterPermissionGranted annotation indicates that this
+	 * function will be rerun automatically whenever the GET_ACCOUNTS permission
+	 * is granted.
+	 */
+	@AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
+	private void chooseAccount() {
+		if (EasyPermissions.hasPermissions(
+				this, Manifest.permission.GET_ACCOUNTS)) {
+			String accountName = getPreferences(Context.MODE_PRIVATE)
+					.getString(PREF_ACCOUNT_NAME, null);
+			if (accountName != null) {
+				mCredential.setSelectedAccountName(accountName);
+				getResultsFromApi();
+			} else {
+				// Start a dialog from which the user can choose an account
+				startActivityForResult(
+						mCredential.newChooseAccountIntent(),
+						REQUEST_ACCOUNT_PICKER);
+			}
+		} else {
+			// Request the GET_ACCOUNTS permission via a user dialog
+			EasyPermissions.requestPermissions(
+					this,
+					"This app needs to access your Google account (via Contacts).",
+					REQUEST_PERMISSION_GET_ACCOUNTS,
+					Manifest.permission.GET_ACCOUNTS);
+		}
+	}
+
+	/**
+	 * Called when an activity launched here (specifically, AccountPicker
+	 * and authorization) exits, giving you the requestCode you started it with,
+	 * the resultCode it returned, and any additional data from it.
+	 * @param requestCode code indicating which activity result is incoming.
+	 * @param resultCode code indicating the result of the incoming
+	 *     activity result.
+	 * @param data Intent (containing result data) returned by incoming
+	 *     activity result.
+	 */
+	@Override
+	protected void onActivityResult(
+			int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		switch(requestCode) {
+			case REQUEST_GOOGLE_PLAY_SERVICES:
+				if (resultCode != RESULT_OK) {
+					mOutputText.setText(
+							"This app requires Google Play Services. Please install " +
+									"Google Play Services on your device and relaunch this app.");
+				} else {
+					getResultsFromApi();
+				}
+				break;
+			case REQUEST_ACCOUNT_PICKER:
+				if (resultCode == RESULT_OK && data != null &&
+						data.getExtras() != null) {
+					String accountName =
+							data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+					if (accountName != null) {
+						SharedPreferences settings =
+								getPreferences(Context.MODE_PRIVATE);
+						SharedPreferences.Editor editor = settings.edit();
+						editor.putString(PREF_ACCOUNT_NAME, accountName);
+						editor.apply();
+						mCredential.setSelectedAccountName(accountName);
+						getResultsFromApi();
+					}
+				}
+				break;
+			case REQUEST_AUTHORIZATION:
+				if (resultCode == RESULT_OK) {
+					getResultsFromApi();
+				}
+				break;
+		}
+	}
+
+	/**
+	 * Respond to requests for permissions at runtime for API 23 and above.
+	 * @param requestCode The request code passed in
+	 *     requestPermissions(android.app.Activity, String, int, String[])
+	 * @param permissions The requested permissions. Never null.
+	 * @param grantResults The grant results for the corresponding permissions
+	 *     which is either PERMISSION_GRANTED or PERMISSION_DENIED. Never null.
+	 */
+	@Override
+	public void onRequestPermissionsResult(int requestCode,
+																				 @NonNull String[] permissions,
+																				 @NonNull int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		EasyPermissions.onRequestPermissionsResult(
+				requestCode, permissions, grantResults, this);
+	}
+
+	/**
+	 * Callback for when a permission is granted using the EasyPermissions
+	 * library.
+	 * @param requestCode The request code associated with the requested
+	 *         permission
+	 * @param list The requested permission list. Never null.
+	 */
+	@Override
+	public void onPermissionsGranted(int requestCode, List<String> list) {
+		// Do nothing.
+	}
+
+	/**
+	 * Callback for when a permission is denied using the EasyPermissions
+	 * library.
+	 * @param requestCode The request code associated with the requested
+	 *         permission
+	 * @param list The requested permission list. Never null.
+	 */
+	@Override
+	public void onPermissionsDenied(int requestCode, List<String> list) {
+		// Do nothing.
+	}
+
+	/**
+	 * Checks whether the device currently has a network connection.
+	 * @return true if the device has a network connection, false otherwise.
+	 */
+	private boolean isDeviceOnline() {
+		ConnectivityManager connMgr =
+				(ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+		return (networkInfo != null && networkInfo.isConnected());
+	}
+
+	/**
+	 * Check that Google Play services APK is installed and up to date.
+	 * @return true if Google Play Services is available and up to
+	 *     date on this device; false otherwise.
+	 */
+	private boolean isGooglePlayServicesAvailable() {
+		GoogleApiAvailability apiAvailability =
+				GoogleApiAvailability.getInstance();
+		final int connectionStatusCode =
+				apiAvailability.isGooglePlayServicesAvailable(this);
+		return connectionStatusCode == ConnectionResult.SUCCESS;
+	}
+
+	/**
+	 * Attempt to resolve a missing, out-of-date, invalid or disabled Google
+	 * Play Services installation via a user dialog, if possible.
+	 */
+	private void acquireGooglePlayServices() {
+		GoogleApiAvailability apiAvailability =
+				GoogleApiAvailability.getInstance();
+		final int connectionStatusCode =
+				apiAvailability.isGooglePlayServicesAvailable(this);
+		if (apiAvailability.isUserResolvableError(connectionStatusCode)) {
+			showGooglePlayServicesAvailabilityErrorDialog(connectionStatusCode);
+		}
+	}
+
+
+	/**
+	 * Display an error dialog showing that Google Play Services is missing
+	 * or out of date.
+	 * @param connectionStatusCode code describing the presence (or lack of)
+	 *     Google Play Services on this device.
+	 */
+	void showGooglePlayServicesAvailabilityErrorDialog(
+			final int connectionStatusCode) {
+		GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+		Dialog dialog = apiAvailability.getErrorDialog(
+				CalendarActivity.this,
+				connectionStatusCode,
+				REQUEST_GOOGLE_PLAY_SERVICES);
+		dialog.show();
+	}
+
+	/**
+	 * An asynchronous task that handles the Google Calendar API call.
+	 * Placing the API calls in their own task ensures the UI stays responsive.
+	 */
+	private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
+		private com.google.api.services.calendar.Calendar mService = null;
+		private Exception mLastError = null;
+
+		MakeRequestTask(GoogleAccountCredential credential) {
+			HttpTransport transport = AndroidHttp.newCompatibleTransport();
+			JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+			mService = new com.google.api.services.calendar.Calendar.Builder(
+					transport, jsonFactory, credential)
+					.setApplicationName("Google Calendar API Android Quickstart")
+					.build();
+		}
+
+		/**
+		 * Background task to call Google Calendar API.
+		 * @param params no parameters needed for this task.
+		 */
+		@Override
+		protected List<String> doInBackground(Void... params) {
+			try {
+				return getDataFromApi();
+			} catch (Exception e) {
+				mLastError = e;
+				cancel(true);
+				return null;
+			}
+		}
+
+		/**
+		 * Fetch a list of the next 10 events from the primary calendar.
+		 * @return List of Strings describing returned events.
+		 * @throws IOException
+		 */
+		private List<String> getDataFromApi() throws IOException {
+			// List the next 10 events from the primary calendar.
+			DateTime now = new DateTime(System.currentTimeMillis());
+			List<String> eventStrings = new ArrayList<String>();
+			Events events = mService.events().list("primary")
+					.setMaxResults(10)
+					.setTimeMin(now)
+					.setOrderBy("startTime")
+					.setSingleEvents(true)
+					.execute();
+			List<Event> items = events.getItems();
+
+			for (Event event : items) {
+				DateTime start = event.getStart().getDateTime();
+				if (start == null) {
+					// All-day events don't have start times, so just use
+					// the start date.
+					start = event.getStart().getDate();
+				}
+				eventStrings.add(
+						String.format("%s (%s)", event.getSummary(), start));
+			}
+			return eventStrings;
+		}
+
+		@Override
+		protected void onPreExecute() {
+			mOutputText.setText("");
+			mProgress.show();
+		}
+
+		@Override
+		protected void onPostExecute(List<String> output) {
+			mProgress.hide();
+			if (output == null || output.size() == 0) {
+				mOutputText.setText("No results returned.");
+			} else {
+				output.add(0, "Data retrieved using the Google Calendar API:");
+				mOutputText.setText(TextUtils.join("\n", output));
+			}
+		}
+
+		@Override
+		protected void onCancelled() {
+			mProgress.hide();
+			if (mLastError != null) {
+				if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
+					showGooglePlayServicesAvailabilityErrorDialog(
+							((GooglePlayServicesAvailabilityIOException) mLastError)
+									.getConnectionStatusCode());
+				} else if (mLastError instanceof UserRecoverableAuthIOException) {
+					startActivityForResult(
+							((UserRecoverableAuthIOException) mLastError).getIntent(),
+							CalendarActivity.REQUEST_AUTHORIZATION);
+				} else {
+					mOutputText.setText("The following error occurred:\n"
+							+ mLastError.getMessage());
+				}
+			} else {
+				mOutputText.setText("Request cancelled.");
+			}
+		}
+	}
 }
