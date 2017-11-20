@@ -22,11 +22,21 @@
     <Button
         android:id="@+id/api_call_button"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:textColor="@color/titleTextColor"
+        android:textSize="15sp"
+        android:layout_marginTop="8dp"/>
 
     <TextView
         android:id="@+id/api_call_text"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:textSize="20sp"/>
+
+    <WebView
+        android:id="@+id/web_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"></WebView>
 
 </LinearLayout>
